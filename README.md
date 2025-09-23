@@ -1,4 +1,3 @@
-# MC-FSA
 diff --git a/README.md b/README.md
 index 64a1eca4ce32a02c0465c77d21203ffd0e95332a..d033b7c5cae30c0d190dcb192ae37ace85f69e45 100644
 --- a/README.md
@@ -47,3 +46,4 @@ index 64a1eca4ce32a02c0465c77d21203ffd0e95332a..d033b7c5cae30c0d190dcb192ae37ace
 +
 +El código está modularizado para facilitar ajustes en las reglas de
 +clasificación o en la detección de límites.
+
