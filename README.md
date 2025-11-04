@@ -64,6 +64,22 @@ Y de forma análoga puedes importar `MelodyAnalyzer` desde
 `melody_analysis_v2` para modificarlo libremente sin afectar al módulo
 original.
 
+### Ejemplo paso a paso con el clon `melody_analysis_v2`
+
+Si prefieres un script listo para ejecutar que explique línea a línea el
+flujo completo y genere las dos imágenes de soporte, revisa
+`examples/visualizar_melodia_v2.py`. El código contiene comentarios en
+español que describen cada instrucción, imprime por consola los segmentos
+detectados y abre tanto el contorno melódico como el espectrograma con las
+secciones resaltadas.
+
+```bash
+python examples/visualizar_melodia_v2.py
+```
+
+Solo necesitas sustituir la ruta `1.mp3` que aparece en el script por tu
+archivo de audio antes de ejecutarlo.
+
 ## Pruebas
 
 ```bash
