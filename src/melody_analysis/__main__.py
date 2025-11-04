@@ -7,7 +7,13 @@ import json
 import sys
 from pathlib import Path
 
+try:  # pragma: no cover - import perezoso para CLI
+    import librosa
+except Exception:  # pragma: no cover
+    librosa = None  # type: ignore
+
 from .pipeline import MelodyAnalyzer
+from .visualization import plot_melody_contour, plot_spectrogram_with_segments
 
 
 def main() -> None:
@@ -33,11 +39,31 @@ def main() -> None:
         default=512,
         help="Longitud del hop empleada para la extracción de características.",
     )
+    parser.add_argument(
+        "--melody-plot",
+        type=Path,
+        default=None,
+        help="Ruta donde guardar la gráfica del contorno melódico detectado.",
+    )
+    parser.add_argument(
+        "--sections-plot",
+        type=Path,
+        default=None,
+        help=(
+            "Ruta donde guardar el espectrograma con las secciones del JSON. "
+            "Si no se especifica, no se genera la figura."
+        ),
+    )
 
     args = parser.parse_args()
 
+    if librosa is None:
+        raise ImportError("librosa es requerida para cargar audio desde la línea de comandos")
+
+    audio, sr = librosa.load(str(args.audio), sr=args.sr)
+
     analyzer = MelodyAnalyzer(sample_rate=args.sr, hop_length=args.hop_length)
-    result = analyzer.analyze_file(str(args.audio))
+    result = analyzer.analyze_audio(audio, sr)
     payload = result.to_dict()
 
     if args.output is None:
@@ -47,6 +73,17 @@ def main() -> None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         with args.output.open("w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
+
+    if args.melody_plot is not None:
+        plot_melody_contour(result, output_path=args.melody_plot)
+
+    if args.sections_plot is not None:
+        plot_spectrogram_with_segments(
+            audio,
+            sr,
+            result,
+            output_path=args.sections_plot,
+        )
 
 
 if __name__ == "__main__":

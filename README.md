@@ -18,26 +18,46 @@ pip install -e .[dev]
 Desde la línea de comandos:
 
 ```bash
-python -m melody_analysis ruta/al/audio.wav --output resultado.json
+python -m melody_analysis ruta/al/audio.wav \
+    --output resultado.json \
+    --melody-plot contorno.png \
+    --sections-plot secciones.png
 ```
+
+Los parámetros `--melody-plot` y `--sections-plot` guardan dos imágenes:
+una con el contorno melódico extraído y otra con el espectrograma mel donde
+se resaltan las secciones descritas en el JSON.
 
 Si quieres experimentar con una copia independiente del pipeline sin tocar la
 implementación original, hay un clon disponible bajo el nombre
 `melody_analysis_v2` con los mismos puntos de entrada:
 
 ```bash
-python -m melody_analysis_v2 ruta/al/audio.wav --output resultado.json
+python -m melody_analysis_v2 ruta/al/audio.wav \
+    --output resultado.json \
+    --melody-plot contorno_v2.png \
+    --sections-plot secciones_v2.png
 ```
 
 En código:
 
 ```python
-from melody_analysis import MelodyAnalyzer
+from melody_analysis import (
+    MelodyAnalyzer,
+    plot_melody_contour,
+    plot_spectrogram_with_segments,
+)
+import librosa
 
 analyzer = MelodyAnalyzer()
 resultado = analyzer.analyze_file("ruta/al/audio.wav")
 for segmento in resultado.segments:
     print(segmento.label, segmento.segment.start_time, segmento.segment.end_time)
+
+# Generar visualizaciones directamente desde Python
+fig1 = plot_melody_contour(resultado)
+audio, sample_rate = librosa.load("ruta/al/audio.wav", sr=22050)
+fig2 = plot_spectrogram_with_segments(audio, sample_rate, resultado)
 ```
 
 Y de forma análoga puedes importar `MelodyAnalyzer` desde

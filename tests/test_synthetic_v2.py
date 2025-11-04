@@ -1,10 +1,15 @@
 import numpy as np
 import pytest
+from matplotlib import pyplot as plt
 
 from melody_analysis_v2.classifier import MelodyClassifier
 from melody_analysis_v2.features import MelodyFeatures
 from melody_analysis_v2.pipeline import MelodyAnalyzer
 from melody_analysis_v2.segmenter import MelodySegmenter
+from melody_analysis_v2.visualization import (
+    plot_melody_contour,
+    plot_spectrogram_with_segments,
+)
 
 
 def _synthetic_features():
@@ -71,3 +76,31 @@ def test_analyzer_works_with_precomputed_features():
     assert result.segments
     assert sum(seg.segment.duration() for seg in result.segments) > 0
     assert any(seg.label == "pregunta" for seg in result.segments)
+
+
+def test_visualizations_generate_images(tmp_path):
+    features = _synthetic_features()
+    analyzer = MelodyAnalyzer()
+    result = analyzer.analyze_features(features)
+
+    melody_path = tmp_path / "melodia_v2.png"
+    contour_fig = plot_melody_contour(result, output_path=melody_path)
+    contour_fig.clf()
+    plt.close(contour_fig)
+    assert melody_path.exists()
+
+    sample_rate = 22050
+    duration = float(features.times[-1])
+    t = np.linspace(0.0, duration, int(duration * sample_rate), endpoint=False)
+    audio = 0.5 * np.sin(2 * np.pi * 220 * t)
+
+    sections_path = tmp_path / "secciones_v2.png"
+    spec_fig = plot_spectrogram_with_segments(
+        audio,
+        sample_rate,
+        result,
+        output_path=sections_path,
+    )
+    spec_fig.clf()
+    plt.close(spec_fig)
+    assert sections_path.exists()
