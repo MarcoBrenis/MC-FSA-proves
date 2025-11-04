@@ -21,6 +21,14 @@ Desde la línea de comandos:
 python -m melody_analysis ruta/al/audio.wav --output resultado.json
 ```
 
+Si quieres experimentar con una copia independiente del pipeline sin tocar la
+implementación original, hay un clon disponible bajo el nombre
+`melody_analysis_v2` con los mismos puntos de entrada:
+
+```bash
+python -m melody_analysis_v2 ruta/al/audio.wav --output resultado.json
+```
+
 En código:
 
 ```python
@@ -31,6 +39,10 @@ resultado = analyzer.analyze_file("ruta/al/audio.wav")
 for segmento in resultado.segments:
     print(segmento.label, segmento.segment.start_time, segmento.segment.end_time)
 ```
+
+Y de forma análoga puedes importar `MelodyAnalyzer` desde
+`melody_analysis_v2` para modificarlo libremente sin afectar al módulo
+original.
 
 ## Pruebas
 

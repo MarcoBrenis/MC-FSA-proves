@@ -21,3 +21,6 @@ dev = ["pytest"]
 [tool.pytest.ini_options]
 addopts = "-q"
 pythonpath = ["src"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
