@@ -1,6 +1,8 @@
 """Ejemplo comentado para analizar una melodía y generar visualizaciones."""
 
 # --- Importación de librerías ---
+from pathlib import Path  # Para manejar rutas de archivos al guardar imágenes.
+
 # Se importan las herramientas necesarias para el análisis y la visualización.
 import soundfile as sf  # Para leer archivos de audio.
 import librosa  # Para rutinas de análisis de audio complementarias.
@@ -35,10 +37,20 @@ def main() -> None:
         print(f"{segmento.label:>12} | {segmento.segment.start_time:7.3f} → {segmento.segment.end_time:7.3f} s")
 
     # --- Visualización del contorno melódico ---
+    # Se asegura un directorio de salida para guardar las figuras generadas.
+    output_dir = Path("salidas_visualizacion")
+    output_dir.mkdir(exist_ok=True)
+
     # Se obtiene una figura con el contorno melódico usando el helper incluido en el paquete.
     contour_fig = plot_melody_contour(resultado)
-    # Se muestra la figura en pantalla para inspeccionar los segmentos y etiquetas.
-    contour_fig.show()
+    # Se define la ruta donde se guardará la imagen del contorno melódico.
+    contour_path = output_dir / "contorno_melodico.png"
+    # Se guarda la figura en disco con buena resolución.
+    contour_fig.savefig(contour_path, dpi=150, bbox_inches="tight")
+    # Se cierra la figura para liberar memoria y evitar advertencias.
+    plt.close(contour_fig)
+    # Se informa en consola dónde quedó almacenada la imagen.
+    print(f"Figura de contorno guardada en: {contour_path.resolve()}")
 
     # --- Visualización manual del Mel-espectrograma ---
     # Se carga el archivo de audio con soundfile para acceder a la señal (y) y la frecuencia de muestreo (sr).
@@ -52,22 +64,32 @@ def main() -> None:
     # Se convierte la potencia a decibelios para resaltar detalles finos.
     Sdb = librosa.power_to_db(S, ref=np.max)
 
-    # Se crea un gráfico del espectrograma en Matplotlib.
-    plt.figure(figsize=(14, 4))
+    # Se crea un gráfico del espectrograma en Matplotlib y se obtiene la figura resultante.
+    manual_fig, ax = plt.subplots(figsize=(14, 4))
     # Se muestra el espectrograma en el gráfico, con ejes de tiempo y frecuencia en escala Mel.
-    librosa.display.specshow(Sdb, sr=sr, x_axis="time", y_axis="mel")
+    librosa.display.specshow(Sdb, sr=sr, x_axis="time", y_axis="mel", ax=ax)
     # Se añade un título descriptivo al gráfico.
-    plt.title("Mel-espectrograma (manual)")
+    ax.set_title("Mel-espectrograma (manual)")
     # Se ajusta el diseño para evitar solapamiento de elementos.
-    plt.tight_layout()
-    # Se muestra el gráfico manual para contrastarlo con la versión anotada.
-    plt.show()
+    manual_fig.tight_layout()
+    # Se guarda la figura manual para contrastarla posteriormente con la versión anotada.
+    manual_path = output_dir / "mel_espectrograma_manual.png"
+    manual_fig.savefig(manual_path, dpi=150, bbox_inches="tight")
+    # Se cierra la figura manual para no acumular recursos.
+    plt.close(manual_fig)
+    # Se informa la ruta de la figura manual.
+    print(f"Mel-espectrograma manual guardado en: {manual_path.resolve()}")
 
     # --- Visualización automatizada con secciones ---
     # Se genera una figura que reutiliza los segmentos detectados para resaltar cada bloque musical.
     sections_fig = plot_spectrogram_with_segments(y, sr, resultado)
-    # Se muestra la figura con las secciones y etiquetas incrustadas.
-    sections_fig.show()
+    # Se guarda la figura con las secciones y etiquetas incrustadas.
+    sections_path = output_dir / "mel_espectrograma_segmentado.png"
+    sections_fig.savefig(sections_path, dpi=150, bbox_inches="tight")
+    # Se cierra la figura anotada para finalizar la sesión de Matplotlib.
+    plt.close(sections_fig)
+    # Se muestra la ruta donde quedó guardado el espectrograma con secciones.
+    print(f"Mel-espectrograma segmentado guardado en: {sections_path.resolve()}")
 
 
 if __name__ == "__main__":

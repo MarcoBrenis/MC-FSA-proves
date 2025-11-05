@@ -70,8 +70,9 @@ Si prefieres un script listo para ejecutar que explique línea a línea el
 flujo completo y genere las dos imágenes de soporte, revisa
 `examples/visualizar_melodia_v2.py`. El código contiene comentarios en
 español que describen cada instrucción, imprime por consola los segmentos
-detectados y abre tanto el contorno melódico como el espectrograma con las
-secciones resaltadas.
+detectados y guarda en `salidas_visualizacion/` tanto el contorno melódico
+como los dos espectrogramas (manual y segmentado) para que puedas abrirlos
+con tu visor preferido sin depender de un backend interactivo.
 
 ```bash
 python examples/visualizar_melodia_v2.py
