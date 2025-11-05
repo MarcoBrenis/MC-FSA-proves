@@ -7,6 +7,7 @@ from pathlib import Path  # Para manejar rutas de archivos al guardar imágenes.
 import soundfile as sf  # Para leer archivos de audio.
 import librosa  # Para rutinas de análisis de audio complementarias.
 import librosa.display  # Para representar el espectrograma en un eje tiempo-frecuencia.
+import matplotlib  # Para consultar qué backend se está usando.
 import matplotlib.pyplot as plt  # Para crear y mostrar gráficos.
 import numpy as np  # Para operaciones numéricas, especialmente con arrays.
 
@@ -36,6 +37,20 @@ def main() -> None:
         # Se imprime la etiqueta, la hora de inicio y la de final con tres decimales.
         print(f"{segmento.label:>12} | {segmento.segment.start_time:7.3f} → {segmento.segment.end_time:7.3f} s")
 
+    # Se consulta el backend activo de Matplotlib para decidir si se mostrarán ventanas.
+    backend = matplotlib.get_backend()
+    backend_lower = backend.lower()
+    interactive_backend = not backend_lower.endswith("agg")
+
+    if interactive_backend:
+        print(f"El backend de Matplotlib es '{backend}', se mostrarán las figuras al final.")
+    else:
+        print(
+            "Backend no interactivo (Agg u otro similar): las figuras se guardarán en disco.\n"
+            "Para abrir ventanas interactivas puedes definir MPLBACKEND=TkAgg (u otro backend)\n"
+            "antes de ejecutar el script, siempre que tengas las dependencias instaladas."
+        )
+
     # --- Visualización del contorno melódico ---
     # Se asegura un directorio de salida para guardar las figuras generadas.
     output_dir = Path("salidas_visualizacion")
@@ -47,8 +62,9 @@ def main() -> None:
     contour_path = output_dir / "contorno_melodico.png"
     # Se guarda la figura en disco con buena resolución.
     contour_fig.savefig(contour_path, dpi=150, bbox_inches="tight")
-    # Se cierra la figura para liberar memoria y evitar advertencias.
-    plt.close(contour_fig)
+    # Si no se dispone de backend interactivo, se cierra la figura para liberar recursos.
+    if not interactive_backend:
+        plt.close(contour_fig)
     # Se informa en consola dónde quedó almacenada la imagen.
     print(f"Figura de contorno guardada en: {contour_path.resolve()}")
 
@@ -75,8 +91,8 @@ def main() -> None:
     # Se guarda la figura manual para contrastarla posteriormente con la versión anotada.
     manual_path = output_dir / "mel_espectrograma_manual.png"
     manual_fig.savefig(manual_path, dpi=150, bbox_inches="tight")
-    # Se cierra la figura manual para no acumular recursos.
-    plt.close(manual_fig)
+    if not interactive_backend:
+        plt.close(manual_fig)
     # Se informa la ruta de la figura manual.
     print(f"Mel-espectrograma manual guardado en: {manual_path.resolve()}")
 
@@ -86,10 +102,15 @@ def main() -> None:
     # Se guarda la figura con las secciones y etiquetas incrustadas.
     sections_path = output_dir / "mel_espectrograma_segmentado.png"
     sections_fig.savefig(sections_path, dpi=150, bbox_inches="tight")
-    # Se cierra la figura anotada para finalizar la sesión de Matplotlib.
-    plt.close(sections_fig)
+    if not interactive_backend:
+        plt.close(sections_fig)
     # Se muestra la ruta donde quedó guardado el espectrograma con secciones.
     print(f"Mel-espectrograma segmentado guardado en: {sections_path.resolve()}")
+
+    # Si hay backend interactivo se realiza un plt.show() final para abrir las ventanas.
+    if interactive_backend:
+        print("Abriendo ventanas de Matplotlib...")
+        plt.show()
 
 
 if __name__ == "__main__":

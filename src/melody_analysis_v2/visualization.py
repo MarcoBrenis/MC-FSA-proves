@@ -7,9 +7,44 @@ from typing import Iterable, Optional
 
 import numpy as np
 
+import os
+import sys
+
 import matplotlib
 
-matplotlib.use("Agg")
+
+def _configure_backend() -> None:
+    """Escoger un backend de Matplotlib compatible con el entorno."""
+
+    requested = os.environ.get("MPLBACKEND")
+    if requested:
+        try:
+            matplotlib.use(requested)
+        except Exception:
+            pass
+        else:
+            return
+
+    current = matplotlib.get_backend().lower()
+    if "agg" not in current:
+        return
+
+    display_available = any(
+        os.environ.get(var)
+        for var in ("DISPLAY", "WAYLAND_DISPLAY", "MPLBACKEND")
+    ) or sys.platform == "darwin" or sys.platform.startswith("win")
+
+    if display_available:
+        for candidate in ("TkAgg", "Qt5Agg", "QtAgg", "MacOSX"):
+            try:
+                matplotlib.use(candidate)
+            except Exception:
+                continue
+            else:
+                return
+
+    matplotlib.use("Agg")
+_configure_backend()
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 

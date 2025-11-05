@@ -71,8 +71,14 @@ flujo completo y genere las dos imágenes de soporte, revisa
 `examples/visualizar_melodia_v2.py`. El código contiene comentarios en
 español que describen cada instrucción, imprime por consola los segmentos
 detectados y guarda en `salidas_visualizacion/` tanto el contorno melódico
-como los dos espectrogramas (manual y segmentado) para que puedas abrirlos
-con tu visor preferido sin depender de un backend interactivo.
+como los dos espectrogramas (manual y segmentado).
+
+El script intenta usar un backend interactivo (TkAgg/QtAgg/MacOSX) si hay
+soporte gráfico disponible, de modo que también puedas ver las ventanas con
+`plt.show()`. Si Matplotlib continúa utilizando `Agg`, exporta la variable
+de entorno `MPLBACKEND` con el backend de tu preferencia (por ejemplo,
+`MPLBACKEND=TkAgg`) antes de ejecutar el script y asegúrate de tener las
+dependencias correspondientes instaladas.
 
 ```bash
 python examples/visualizar_melodia_v2.py
