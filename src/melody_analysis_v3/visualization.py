@@ -64,13 +64,29 @@ def _ensure_output_path(output_path: Optional[Path]) -> Optional[Path]:
     return output_path
 
 
+LABEL_COLORS = {
+    "pregunta": "#2ca02c",  # verde
+    "respuesta": "#1f77b4",  # azul
+    "exposicion": "#9467bd",
+    "desarrollo": "#ff7f0e",
+    "transicion": "#d62728",
+    "cadencia": "#e377c2",
+    "afirmacion": "#8c564b",
+}
+
+
+def _label_color(label: str) -> str:
+    return LABEL_COLORS.get(label.lower(), "#7f7f7f")
+
+
 def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> None:
     for ann in segments:
+        color = _label_color(ann.label)
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
-            color="tab:orange",
-            alpha=0.15,
+            color=color,
+            alpha=0.18,
         )
         ax.text(
             (ann.segment.start_time + ann.segment.end_time) / 2,
@@ -79,6 +95,7 @@ def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> Non
             ha="center",
             va="bottom",
             fontsize=8,
+            color=color,
         )
 
 
@@ -160,11 +177,12 @@ def plot_spectrogram_with_segments(
 
     ymax = S_db.shape[0]
     for ann in result.segments:
+        color = _label_color(ann.label)
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
-            color="white",
-            alpha=0.15,
+            color=color,
+            alpha=0.18,
             linewidth=0,
         )
         ax.text(
@@ -175,10 +193,10 @@ def plot_spectrogram_with_segments(
             va="top",
             color="white",
             fontsize=8,
-            bbox={"facecolor": "black", "alpha": 0.4, "pad": 1},
+            bbox={"facecolor": color, "alpha": 0.65, "pad": 1.5},
         )
 
-    ax.set_title("Espectrograma con secciones anotadas (v2)")
+    ax.set_title("Espectrograma con secciones anotadas (v3)")
     fig.tight_layout()
 
     output_path = _ensure_output_path(output_path)

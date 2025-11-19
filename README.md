@@ -26,7 +26,20 @@ python -m melody_analysis ruta/al/audio.wav \
 
 Los parámetros `--melody-plot` y `--sections-plot` guardan dos imágenes:
 una con el contorno melódico extraído y otra con el espectrograma mel donde
-se resaltan las secciones descritas en el JSON.
+se resaltan las secciones descritas en el JSON. En la versión basada en
+CREPE cada rol se colorea automáticamente para facilitar la lectura:
+
+| Rol         | Color |
+|-------------|-------|
+| respuesta   | Azul  |
+| pregunta    | Verde |
+| exposición  | Morado|
+| desarrollo  | Naranja |
+| transición  | Rojo |
+| cadencia    | Rosa |
+| afirmación  | Café |
+
+Si el clasificador produce una etiqueta diferente se dibuja en gris.
 
 Si quieres experimentar con una copia independiente del pipeline sin tocar la
 implementación original, hay un clon disponible bajo el nombre
