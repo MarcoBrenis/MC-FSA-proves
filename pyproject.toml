@@ -18,6 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest"]
+crepe = ["crepe>=0.0.14"]
 
 [tool.pytest.ini_options]
 addopts = "-q"

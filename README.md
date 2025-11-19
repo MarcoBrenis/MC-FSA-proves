@@ -60,9 +60,22 @@ audio, sample_rate = librosa.load("ruta/al/audio.wav", sr=22050)
 fig2 = plot_spectrogram_with_segments(audio, sample_rate, resultado)
 ```
 
+Además ahora existe una variante `melody_analysis_v3` que utiliza CREPE para
+estimar el pitch. Este módulo replica el resto del pipeline pero permite
+comparar la calidad de CREPE vs. la implementación basada en ``pyin``. Para
+usar esta versión instala la dependencia opcional ``crepe``:
+
+```bash
+pip install .[crepe]
+python -m melody_analysis_v3 ruta/al/audio.wav \
+    --output resultado_crepe.json \
+    --melody-plot contorno_v3.png \
+    --sections-plot secciones_v3.png
+```
+
 Y de forma análoga puedes importar `MelodyAnalyzer` desde
-`melody_analysis_v2` para modificarlo libremente sin afectar al módulo
-original.
+`melody_analysis_v2` o `melody_analysis_v3` para modificarlo libremente sin
+afectar al módulo original.
 
 ### Ejemplo paso a paso con el clon `melody_analysis_v2`
 
