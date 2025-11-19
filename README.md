@@ -37,6 +37,19 @@ segmento: tiempo de inicio y fin, etiqueta (por ejemplo, "Pregunta",
 "Respuesta", "Exposición del tema"), valores descriptivos de pendiente
 melódica, rango, energía, etc.
 
+### Visualización del contorno
+
+Para revisar gráficamente la melodía estimada y los segmentos detectados
+puedes utilizar `visualize_melody.py`, que comparte las mismas opciones de
+backend.
+
+```bash
+python visualize_melody.py ruta/al/audio.wav --pitch-backend crepe --segments 6 --output figuras/analisis.png
+```
+
+Si omites `--output` se abrirá una ventana interactiva (cuando el entorno lo
+permita) para inspeccionar la gráfica.
+
 ## Desarrollo
 
 La lógica principal se encuentra en `melody_analysis/segmenter.py`, donde se:

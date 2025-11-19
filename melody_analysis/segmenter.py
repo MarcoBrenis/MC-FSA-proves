@@ -215,7 +215,20 @@ class MelodySegmenter:
         target_segments: int | None = None,
         min_duration: float = 1.5,
     ) -> List[MelodySegment]:
-        """Segment and classify the melody of an audio file.
+        """Segment and classify the melody of an audio file."""
+
+        segments, _, _ = self.analyze(
+            path=path, target_segments=target_segments, min_duration=min_duration
+        )
+        return segments
+
+    def analyze(
+        self,
+        path: str,
+        target_segments: int | None = None,
+        min_duration: float = 1.5,
+    ) -> Tuple[List[MelodySegment], np.ndarray, np.ndarray]:
+        """Full analysis returning segments along with the melody contour.
 
         Parameters
         ----------
@@ -226,6 +239,11 @@ class MelodySegmenter:
         min_duration:
             Minimum allowed duration in seconds for a segment. Shorter segments
             will be merged with their neighbors.
+        Returns
+        -------
+        segments, times, melody:
+            The detected segments plus the melodic contour (MIDI) and the
+            corresponding time stamps, useful for visualization utilities.
         """
 
         audio, sr = librosa.load(path, sr=self.sample_rate)
@@ -245,7 +263,7 @@ class MelodySegmenter:
 
         segments = self._classify_segments(boundary_frames, times, melody, features)
         segments = self._merge_short_segments(segments, min_duration)
-        return segments
+        return segments, times, melody
 
     def _merge_short_segments(self, segments: Sequence[MelodySegment], min_duration: float) -> List[MelodySegment]:
         if not segments:
