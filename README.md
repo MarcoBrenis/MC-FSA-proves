@@ -148,6 +148,35 @@ python examples/visualizar_melodia_v2.py
 Solo necesitas sustituir la ruta `1.mp3` que aparece en el script por tu
 archivo de audio antes de ejecutarlo.
 
+### Guía rápida: dejar todo funcionando en local
+
+Si únicamente quieres “enchufar” tu canción y obtener resultados sin pensar en
+parámetros, puedes apoyarte en el nuevo script `examples/analizar_cancion_cli.py`.
+
+1. **Instala las dependencias** como se describe en la sección de instalación.
+   Para usar CREPE agrega el extra `crepe`: `pip install -e .[dev,crepe]`.
+2. **Lanza el script** apuntando al archivo que quieras analizar. Por ejemplo:
+
+   ```bash
+   python examples/analizar_cancion_cli.py ~/musica/mi_cancion.mp3 \\
+       --variant v3 \\
+       --output-dir ~/musica/salidas
+   ```
+
+   - `--variant` acepta `v1` (pipeline original con PYIN), `v2` (clon para
+     pruebas) y `v3` (versión CREPE con coloración automática del espectrograma).
+   - `--output-dir` se crea automáticamente (por defecto `salidas_cli/`).
+   - Si no especificas `--prefix`, se usa el nombre del archivo (`mi_cancion`).
+   - Puedes omitir las figuras PNG añadiendo `--skip-plots`.
+3. **Revisa la carpeta de resultados**. El script guarda un JSON con los
+   segmentos (`mi_cancion_v3.json`) y, salvo que desactives las gráficas, dos
+   imágenes: `*_contorno.png` con la curva de pitch y
+   `*_secciones.png` con el espectrograma coloreado usando las etiquetas del
+   JSON.
+
+Con eso tienes un flujo mínimo “funcionando” en tres comandos: crear el
+entorno virtual, instalar dependencias y ejecutar el script con tu canción.
+
 ## Pruebas
 
 ```bash
