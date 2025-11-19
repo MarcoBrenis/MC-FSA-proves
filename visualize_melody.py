@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 from typing import Sequence
@@ -15,7 +16,7 @@ if not os.environ.get("DISPLAY"):
 
 import matplotlib.pyplot as plt
 
-from melody_analysis import MelodySegment, MelodySegmenter
+from melody_analysis import MelodySegment, MelodySegmenter, summarize_segments
 
 
 _SEGMENT_COLORS = [
@@ -59,6 +60,12 @@ def parse_args() -> argparse.Namespace:
         help="Ruta donde guardar la figura generada (PNG, PDF, etc.)",
     )
     parser.add_argument(
+        "--json",
+        type=Path,
+        default=None,
+        help="Guardar el resumen de segmentación/clasificación en formato JSON",
+    )
+    parser.add_argument(
         "--dpi",
         type=int,
         default=120,
@@ -68,6 +75,11 @@ def parse_args() -> argparse.Namespace:
         "--no-show",
         action="store_true",
         help="No abrir la ventana interactiva (útil en entornos sin display)",
+    )
+    parser.add_argument(
+        "--no-print",
+        action="store_true",
+        help="No mostrar el resumen en consola (útil cuando solo se exporta JSON)",
     )
     return parser.parse_args()
 
@@ -97,6 +109,7 @@ def main() -> None:
     segments, times, melody = segmenter.analyze(
         str(args.audio), target_segments=args.segments, min_duration=args.min_duration
     )
+    summary = summarize_segments(segments)
 
     times = np.asarray(times, dtype=float)
     melody = np.asarray(melody, dtype=float)
@@ -123,6 +136,13 @@ def main() -> None:
         plt.show()
     else:
         plt.close(fig)
+
+    if args.json is not None:
+        args.json.parent.mkdir(parents=True, exist_ok=True)
+        args.json.write_text(json.dumps(summary, indent=2, ensure_ascii=False))
+
+    if not args.no_print:
+        print(json.dumps(summary, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":

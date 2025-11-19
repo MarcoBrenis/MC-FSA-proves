@@ -41,14 +41,16 @@ melódica, rango, energía, etc.
 
 Para revisar gráficamente la melodía estimada y los segmentos detectados
 puedes utilizar `visualize_melody.py`, que comparte las mismas opciones de
-backend.
+backend y además exporta/visualiza el resumen de segmentación y clasificación.
 
 ```bash
-python visualize_melody.py ruta/al/audio.wav --pitch-backend crepe --segments 6 --output figuras/analisis.png
+python visualize_melody.py ruta/al/audio.wav --pitch-backend crepe --segments 6 \
+    --output figuras/analisis.png --json reportes/analisis.json
 ```
 
 Si omites `--output` se abrirá una ventana interactiva (cuando el entorno lo
-permita) para inspeccionar la gráfica.
+permita) para inspeccionar la gráfica. El resumen JSON tiene el mismo formato
+que el generado por `segment_melody.py`.
 
 ## Desarrollo
 
