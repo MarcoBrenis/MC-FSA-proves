@@ -122,16 +122,27 @@ class MelodySegmenter:
         hop_length: int = 512,
         fmin: float = 80.0,
         fmax: float = 1000.0,
+        pitch_backend: str = "pyin",
+        crepe_step_size: float = 20.0,
     ) -> None:
         self.sample_rate = sample_rate
         self.hop_length = hop_length
         self.fmin = fmin
         self.fmax = fmax
+        self.pitch_backend = pitch_backend.lower()
+        self.crepe_step_size = crepe_step_size
 
     def _extract_melody(self, audio: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """Estimate the melodic contour using probabilistic YIN."""
+        """Estimate the melodic contour using the configured backend."""
 
-        f0, voiced_flag, confidence = librosa.pyin(
+        if self.pitch_backend == "pyin":
+            return self._extract_melody_pyin(audio)
+        if self.pitch_backend == "crepe":
+            return self._extract_melody_crepe(audio)
+        raise ValueError(f"Unsupported pitch backend: {self.pitch_backend}")
+
+    def _extract_melody_pyin(self, audio: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        f0, _, _ = librosa.pyin(
             audio,
             sr=self.sample_rate,
             fmin=self.fmin,
@@ -143,10 +154,45 @@ class MelodySegmenter:
         times = librosa.times_like(f0, sr=self.sample_rate, hop_length=self.hop_length)
         return f0_midi, times
 
-    def _feature_matrix(self, melody: np.ndarray, audio: np.ndarray) -> np.ndarray:
+    def _extract_melody_crepe(self, audio: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        try:
+            import crepe
+        except ImportError as exc:  # pragma: no cover - optional dependency
+            raise RuntimeError(
+                "The 'crepe' backend requires the optional crepe package to be installed."
+            ) from exc
+
+        target_sr = 16000
+        if self.sample_rate != target_sr:
+            audio_resampled = librosa.resample(audio, orig_sr=self.sample_rate, target_sr=target_sr)
+        else:
+            audio_resampled = audio
+
+        step_size = max(5.0, float(self.crepe_step_size))
+        times, frequency, confidence, _ = crepe.predict(
+            audio_resampled,
+            target_sr,
+            viterbi=True,
+            step_size=step_size,
+        )
+        f0_hz = np.asarray(frequency, dtype=float)
+        f0_hz = np.where(np.asarray(confidence) < 0.3, np.nan, f0_hz)
+        f0_midi = librosa.hz_to_midi(_interpolate_nans(f0_hz))
+        return f0_midi, np.asarray(times, dtype=float)
+
+    def _feature_matrix(self, melody: np.ndarray, audio: np.ndarray, times: np.ndarray) -> np.ndarray:
         """Build a feature matrix summarizing melodic and energy cues."""
 
-        rms = librosa.feature.rms(y=audio, hop_length=self.hop_length)[0]
+        hop_length = max(1, int(self.hop_length))
+        rms = librosa.feature.rms(y=audio, hop_length=hop_length)[0]
+        rms_times = librosa.times_like(rms, sr=self.sample_rate, hop_length=hop_length)
+        target_times = np.asarray(times, dtype=float)
+        if target_times.size != melody.size:
+            raise ValueError("Melody and time arrays must have the same length.")
+        if rms.size != melody.size:
+            if rms_times.size < 2:
+                rms_times = np.linspace(0.0, target_times[-1] if target_times.size else 0.0, num=rms.size)
+            rms = np.interp(target_times, rms_times, rms, left=rms[0], right=rms[-1])
         melody = _interpolate_nans(melody)
         velocity = np.gradient(melody)
         acceleration = np.gradient(velocity)
@@ -185,7 +231,10 @@ class MelodySegmenter:
         audio, sr = librosa.load(path, sr=self.sample_rate)
         self.sample_rate = sr
         melody, times = self._extract_melody(audio)
-        features = self._feature_matrix(melody, audio)
+        if times.size > 1:
+            hop_duration = float(np.median(np.diff(times)))
+            self.hop_length = max(1, int(round(hop_duration * self.sample_rate)))
+        features = self._feature_matrix(melody, audio, times)
         similarity = self._self_similarity(features)
 
         lag = 16 if target_segments is None else max(4, similarity.shape[0] // (target_segments + 1))

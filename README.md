@@ -20,6 +20,18 @@ clasificación retórica de cada segmento.
 python segment_melody.py ruta/al/audio.wav --segments 6 --json analisis.json
 ```
 
+La extracción de la melodía puede hacerse tanto con `librosa.pyin` (por
+defecto) como con [CREPE](https://github.com/marl/crepe). Para comparar ambos
+enfoques basta con indicar el backend deseado y, opcionalmente, el tamaño de
+paso (en milisegundos) utilizado por CREPE:
+
+```bash
+python segment_melody.py ruta/al/audio.wav --pitch-backend crepe --crepe-step-ms 10
+```
+
+El uso de CREPE requiere instalar su dependencia (incluida en
+`requirements.txt`).
+
 El comando anterior generará un archivo JSON con la información de cada
 segmento: tiempo de inicio y fin, etiqueta (por ejemplo, "Pregunta",
 "Respuesta", "Exposición del tema"), valores descriptivos de pendiente
