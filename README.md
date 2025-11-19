@@ -73,6 +73,41 @@ audio, sample_rate = librosa.load("ruta/al/audio.wav", sr=22050)
 fig2 = plot_spectrogram_with_segments(audio, sample_rate, resultado)
 ```
 
+### ¿Cómo analizo mi propia canción?
+
+1. **Consigue el archivo de audio** en tu equipo en un formato que `librosa`
+   pueda leer (WAV, MP3, FLAC, etc.). No es necesario moverlo al repositorio;
+   basta con conocer la ruta absoluta o relativa.
+2. **Ejecuta la herramienta** apuntando a ese archivo. Por ejemplo, si tienes
+   `mi_cancion.mp3` en la carpeta `~/musica/`, puedes invocar cualquiera de los
+   módulos disponibles:
+
+   ```bash
+   python -m melody_analysis ~/musica/mi_cancion.mp3 \
+       --output mi_cancion.json \
+       --melody-plot mi_cancion_contorno.png \
+       --sections-plot mi_cancion_secciones.png
+
+   # Variante CREPE (instalando previamente el extra "crepe")
+   python -m melody_analysis_v3 ~/musica/mi_cancion.mp3 \
+       --output mi_cancion_crepe.json \
+       --melody-plot mi_cancion_contorno_v3.png \
+       --sections-plot mi_cancion_secciones_v3.png
+   ```
+
+3. **(Opcional) Convierte a WAV** si prefieres trabajar siempre con el mismo
+   formato. Con `ffmpeg` sería:
+
+   ```bash
+   ffmpeg -i ~/musica/mi_cancion.mp3 ~/musica/mi_cancion.wav
+   ```
+
+4. **Modifica los ejemplos** para automatizar el proceso. En
+   `examples/visualizar_melodia_v2.py` solo debes reemplazar la ruta `1.mp3`
+   por tu archivo antes de ejecutar `python examples/visualizar_melodia_v2.py`;
+   el script imprime los segmentos detectados y guarda las gráficas
+   correspondientes en `salidas_visualizacion/`.
+
 Además ahora existe una variante `melody_analysis_v3` que utiliza CREPE para
 estimar el pitch. Este módulo replica el resto del pipeline pero permite
 comparar la calidad de CREPE vs. la implementación basada en ``pyin``. Para
