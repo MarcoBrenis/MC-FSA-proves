@@ -15,7 +15,8 @@ pip install -e .[dev]
 
 ## Uso
 
-Desde la línea de comandos:
+Desde la línea de comandos (reemplaza `ruta/al/audio.wav` por la ruta real,
+ya sea absoluta o relativa, al archivo que quieras analizar):
 
 ```bash
 python -m melody_analysis ruta/al/audio.wav \
@@ -78,9 +79,10 @@ fig2 = plot_spectrogram_with_segments(audio, sample_rate, resultado)
 1. **Consigue el archivo de audio** en tu equipo en un formato que `librosa`
    pueda leer (WAV, MP3, FLAC, etc.). No es necesario moverlo al repositorio;
    basta con conocer la ruta absoluta o relativa.
-2. **Ejecuta la herramienta** apuntando a ese archivo. Por ejemplo, si tienes
-   `mi_cancion.mp3` en la carpeta `~/musica/`, puedes invocar cualquiera de los
-   módulos disponibles:
+2. **Ejecuta la herramienta** apuntando a ese archivo. El camino va como
+   primer argumento sin bandera; basta con escribir la ruta donde guardaste la
+   canción. Por ejemplo, si tienes `mi_cancion.mp3` en la carpeta
+   `~/musica/`, puedes invocar cualquiera de los módulos disponibles:
 
    ```bash
    python -m melody_analysis ~/musica/mi_cancion.mp3 \
@@ -155,7 +157,8 @@ parámetros, puedes apoyarte en el nuevo script `examples/analizar_cancion_cli.p
 
 1. **Instala las dependencias** como se describe en la sección de instalación.
    Para usar CREPE agrega el extra `crepe`: `pip install -e .[dev,crepe]`.
-2. **Lanza el script** apuntando al archivo que quieras analizar. Por ejemplo:
+2. **Lanza el script** pasando como primer argumento la ruta del archivo que
+   quieras analizar (acepta rutas absolutas o relativas). Por ejemplo:
 
    ```bash
    python examples/analizar_cancion_cli.py ~/musica/mi_cancion.mp3 \\

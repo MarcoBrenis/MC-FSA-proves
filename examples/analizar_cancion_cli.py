@@ -75,6 +75,11 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    if not args.audio.exists():
+        parser.error(f"No se encontró el archivo de audio: {args.audio}")
+    if not args.audio.is_file():
+        parser.error(f"La ruta proporcionada no es un archivo válido: {args.audio}")
+
     prefix = args.prefix or args.audio.stem
     output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
