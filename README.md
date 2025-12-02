@@ -60,6 +60,30 @@ audio, sample_rate = librosa.load("ruta/al/audio.wav", sr=22050)
 fig2 = plot_spectrogram_with_segments(audio, sample_rate, resultado)
 ```
 
+Si quieres usar directamente el clon con los colores mejorados (`melody_analysis_v2`)
+desde un script como el que muestras (`from src.melody_analysis_v2 import ...`),
+asegúrate primero de haber instalado el proyecto en editable (`pip install -e .`)
+o de exportar `PYTHONPATH=src` antes de ejecutar el script. Luego importa sin el
+prefijo `src` así:
+
+```python
+from melody_analysis_v2 import (
+    MelodyAnalyzer,
+    plot_melody_contour,
+    plot_spectrogram_with_segments,
+)
+import librosa
+
+analyzer = MelodyAnalyzer()
+resultado = analyzer.analyze_file("1.mp3")
+for segmento in resultado.segments:
+    print(segmento.label, segmento.segment.start_time, segmento.segment.end_time)
+
+fig1 = plot_melody_contour(resultado)
+audio, sample_rate = librosa.load("1.mp3", sr=22050)
+fig2 = plot_spectrogram_with_segments(audio, sample_rate, resultado)
+```
+
 Y de forma análoga puedes importar `MelodyAnalyzer` desde
 `melody_analysis_v2` para modificarlo libremente sin afectar al módulo
 original.
