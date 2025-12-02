@@ -60,6 +60,22 @@ except Exception:  # pragma: no cover
 
 from .pipeline import MelodyAnalysisResult
 
+LABEL_COLOR_MAP = {
+    "exposicion": "tab:blue",
+    "desarrollo": "tab:orange",
+    "pregunta": "tab:red",
+    "respuesta": "tab:green",
+    "transicion": "tab:purple",
+    "cadencia": "tab:brown",
+    "afirmacion": "tab:gray",
+}
+
+
+def _label_color(label: str) -> str:
+    """Asignar un color consistente a cada etiqueta funcional."""
+
+    return LABEL_COLOR_MAP.get(label.lower(), "tab:gray")
+
 
 def _ensure_output_path(output_path: Optional[Path]) -> Optional[Path]:
     """Crear la carpeta de salida si se especifica una ruta."""
@@ -74,10 +90,11 @@ def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> Non
     """Sombrear cada segmento en el eje temporal."""
 
     for ann in segments:
+        color = _label_color(ann.label)
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
-            color="tab:orange",
+            color=color,
             alpha=0.15,
         )
         ax.text(
@@ -88,6 +105,7 @@ def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> Non
             va="bottom",
             fontsize=8,
             rotation=0,
+            color=color,
         )
 
 
@@ -176,10 +194,11 @@ def plot_spectrogram_with_segments(
 
     ymax = S_db.shape[0]
     for ann in result.segments:
+        color = _label_color(ann.label)
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
-            color="white",
+            color=color,
             alpha=0.15,
             linewidth=0,
         )
@@ -189,9 +208,9 @@ def plot_spectrogram_with_segments(
             ann.label,
             ha="center",
             va="top",
-            color="white",
+            color="black",
             fontsize=8,
-            bbox={"facecolor": "black", "alpha": 0.4, "pad": 1},
+            bbox={"facecolor": color, "alpha": 0.35, "pad": 1},
         )
 
     ax.set_title("Espectrograma mel con secciones anotadas")

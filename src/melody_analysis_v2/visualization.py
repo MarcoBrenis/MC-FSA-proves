@@ -56,6 +56,20 @@ except Exception:  # pragma: no cover
 
 from .pipeline import MelodyAnalysisResult
 
+LABEL_COLOR_MAP = {
+    "exposicion": "tab:blue",
+    "desarrollo": "tab:orange",
+    "pregunta": "tab:red",
+    "respuesta": "tab:green",
+    "transicion": "tab:purple",
+    "cadencia": "tab:brown",
+    "afirmacion": "tab:gray",
+}
+
+
+def _label_color(label: str) -> str:
+    return LABEL_COLOR_MAP.get(label.lower(), "tab:gray")
+
 
 def _ensure_output_path(output_path: Optional[Path]) -> Optional[Path]:
     if output_path is None:
@@ -66,10 +80,11 @@ def _ensure_output_path(output_path: Optional[Path]) -> Optional[Path]:
 
 def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> None:
     for ann in segments:
+        color = _label_color(ann.label)
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
-            color="tab:orange",
+            color=color,
             alpha=0.15,
         )
         ax.text(
@@ -79,6 +94,7 @@ def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> Non
             ha="center",
             va="bottom",
             fontsize=8,
+            color=color,
         )
 
 
@@ -160,10 +176,11 @@ def plot_spectrogram_with_segments(
 
     ymax = S_db.shape[0]
     for ann in result.segments:
+        color = _label_color(ann.label)
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
-            color="white",
+            color=color,
             alpha=0.15,
             linewidth=0,
         )
@@ -173,9 +190,9 @@ def plot_spectrogram_with_segments(
             ann.label,
             ha="center",
             va="top",
-            color="white",
+            color="black",
             fontsize=8,
-            bbox={"facecolor": "black", "alpha": 0.4, "pad": 1},
+            bbox={"facecolor": color, "alpha": 0.35, "pad": 1},
         )
 
     ax.set_title("Espectrograma con secciones anotadas (v2)")
