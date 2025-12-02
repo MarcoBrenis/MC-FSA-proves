@@ -87,6 +87,25 @@ python examples/visualizar_melodia_v2.py
 Solo necesitas sustituir la ruta `1.mp3` que aparece en el script por tu
 archivo de audio antes de ejecutarlo.
 
+### Variante con CREPE para extraer el contorno melódico
+
+En la rama `CREPE` puedes utilizar un extractor basado en la red neuronal
+CREPE. Funciona con archivos comprimidos (`mp3`, `flac`, `ogg`, etc.) y genera
+el mismo tipo de JSON y visualizaciones que el pipeline principal. Instala la
+dependencia opcional y ejecuta el módulo dedicado:
+
+```bash
+pip install -e .[crepe]
+python -m melody_crepe ruta/al/audio.mp3 \
+    --output resultado_crepe.json \
+    --melody-plot contorno_crepe.png \
+    --sections-plot secciones_crepe.png
+```
+
+Los parámetros `--model-capacity` y `--step-size-ms` te permiten ajustar el
+modelo de CREPE y el tamaño del salto temporal (en milisegundos) para
+obtener contornos más densos o ligeros según el caso.
+
 ## Pruebas
 
 ```bash
