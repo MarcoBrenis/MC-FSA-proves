@@ -84,6 +84,36 @@ audio, sample_rate = librosa.load("1.mp3", sr=22050)
 fig2 = plot_spectrogram_with_segments(audio, sample_rate, resultado)
 ```
 
+### Checklist rápido para usar el visualizador en tu propio script
+
+Si ya tienes un script parecido al ejemplo anterior y parece que "no hace
+nada", verifica estos puntos:
+
+1) Instala el proyecto en editable (`pip install -e .[dev]`) o exporta
+   `PYTHONPATH=src` en la misma sesión antes de ejecutarlo. Así las
+   importaciones `from melody_analysis_v2 import ...` funcionarán sin el
+   prefijo `src.`
+2) Llama a las funciones de visualización (`plot_melody_contour` y
+   `plot_spectrogram_with_segments`) igual que en el snippet y guarda o
+   muestra las figuras:
+
+```python
+fig1 = plot_melody_contour(resultado)
+fig1.savefig("contorno.png", dpi=150)
+audio, sample_rate = librosa.load("1.mp3", sr=22050)
+fig2 = plot_spectrogram_with_segments(audio, sample_rate, resultado)
+fig2.savefig("secciones.png", dpi=150)
+```
+
+3) Si quieres ver las ventanas interactivas, exporta un backend con soporte
+   gráfico, por ejemplo `MPLBACKEND=TkAgg`, o ejecuta el script en un entorno
+   que ya tenga backend interactivo. Si Matplotlib queda en modo `Agg`, las
+   figuras se guardarán en disco (como en el ejemplo anterior) y no se
+   abrirán ventanas.
+
+Siguiendo esos pasos, tu snippet estará usando el visualizador tal como en el
+clon `melody_analysis_v2` con colores para cada clasificación.
+
 Y de forma análoga puedes importar `MelodyAnalyzer` desde
 `melody_analysis_v2` para modificarlo libremente sin afectar al módulo
 original.
