@@ -77,6 +77,13 @@ def _label_color(label: str) -> str:
     return LABEL_COLOR_MAP.get(label.lower(), "tab:gray")
 
 
+def _midi_to_hz(pitch_midi: np.ndarray) -> np.ndarray:
+    """Convertir valores MIDI a frecuencia fundamental (f0) en Hz."""
+
+    pitch_midi = np.asarray(pitch_midi, dtype=float)
+    return 440.0 * np.power(2.0, (pitch_midi - 69.0) / 12.0)
+
+
 def _ensure_output_path(output_path: Optional[Path]) -> Optional[Path]:
     """Crear la carpeta de salida si se especifica una ruta."""
 
@@ -120,11 +127,18 @@ def plot_melody_only(
 
     times = result.features.times
     pitch = result.features.pitch_midi
+    f0_hz = _midi_to_hz(pitch)
 
     fig, ax = plt.subplots(figsize=(10, 3))
     ax.plot(times, pitch, label="Melodía (MIDI)", color="tab:blue")
     ax.set_xlabel("Tiempo (s)")
     ax.set_ylabel("Pitch (MIDI)")
+
+    # Eje secundario para f0 en Hz
+    ax_hz = ax.twinx()
+    ax_hz.plot(times, f0_hz, label="f0 (Hz)", color="tab:red", alpha=0.5)
+    ax_hz.set_ylabel("f0 (Hz)", color="tab:red")
+    ax_hz.tick_params(axis="y", labelcolor="tab:red")
 
     if show_segments:
         ymax = float(np.nanmax(pitch)) if pitch.size else 0.0
@@ -152,6 +166,7 @@ def plot_melody_contour(
     times = result.features.times
     pitch = result.features.pitch_midi
     energy = result.features.energy
+    f0_hz = _midi_to_hz(pitch)
 
     fig, ax1 = plt.subplots(figsize=(10, 4))
     ax1.plot(times, pitch, label="Melodía (MIDI)", color="tab:blue")
@@ -166,6 +181,13 @@ def plot_melody_contour(
     ax2.plot(times, energy, label="Energía", color="tab:green", alpha=0.6)
     ax2.set_ylabel("Energía normalizada", color="tab:green")
     ax2.tick_params(axis="y", labelcolor="tab:green")
+
+    # Mostrar f0 en Hz en un tercer eje para evitar solapamientos
+    ax3 = ax1.twinx()
+    ax3.spines["right"].set_position(("axes", 1.1))
+    ax3.plot(times, f0_hz, label="f0 (Hz)", color="tab:red", alpha=0.5)
+    ax3.set_ylabel("f0 (Hz)", color="tab:red")
+    ax3.tick_params(axis="y", labelcolor="tab:red")
 
     ax1.set_title("Contorno melódico y segmentos detectados")
     fig.tight_layout()
@@ -224,6 +246,11 @@ def plot_spectrogram_with_segments(
     )
     fig.colorbar(img, ax=ax, format="%.0f dB", label="Intensidad")
 
+    # Trazar f0 sobre el eje mel para ubicar la fundamental
+    f0_hz = _midi_to_hz(result.features.pitch_midi)
+    f0_mel = librosa.hz_to_mel(f0_hz)
+    ax.plot(result.features.times, f0_mel, color="white", linewidth=1.5, alpha=0.9, label="f0")
+
     ymax = S_db.shape[0]
     for ann in result.segments:
         color = _label_color(ann.label)
@@ -245,7 +272,8 @@ def plot_spectrogram_with_segments(
             bbox={"facecolor": color, "alpha": 0.35, "pad": 1},
         )
 
-    ax.set_title("Espectrograma mel con secciones anotadas")
+    ax.set_title("Espectrograma mel con secciones anotadas y f0")
+    ax.legend(loc="upper right")
     fig.tight_layout()
 
     output_path = _ensure_output_path(output_path)

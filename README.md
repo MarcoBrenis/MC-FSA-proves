@@ -65,6 +65,7 @@ audio, sample_rate = librosa.load("ruta/al/audio.wav", sr=22050)
 fig2 = plot_spectrogram_with_segments(audio, sample_rate, resultado)
 # Si solo quieres el contorno melódico sin energía:
 fig_melodia = plot_melody_only(resultado)
+# Las gráficas incluyen el contorno en MIDI y la curva f0 (Hz) superpuesta.
 ```
 
 Si quieres usar directamente el clon con los colores mejorados (`melody_analysis_v2`)
