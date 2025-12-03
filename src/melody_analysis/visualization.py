@@ -109,6 +109,38 @@ def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> Non
         )
 
 
+def plot_melody_only(
+    result: MelodyAnalysisResult,
+    *,
+    output_path: Optional[Path] = None,
+    dpi: int = 300,
+    show_segments: bool = True,
+) -> Figure:
+    """Graficar únicamente el contorno melódico opcionalmente con segmentos."""
+
+    times = result.features.times
+    pitch = result.features.pitch_midi
+
+    fig, ax = plt.subplots(figsize=(10, 3))
+    ax.plot(times, pitch, label="Melodía (MIDI)", color="tab:blue")
+    ax.set_xlabel("Tiempo (s)")
+    ax.set_ylabel("Pitch (MIDI)")
+
+    if show_segments:
+        ymax = float(np.nanmax(pitch)) if pitch.size else 0.0
+        _draw_segment_overlays(ax, result.segments, ymax)
+
+    ax.set_title("Contorno melódico")
+    ax.grid(True, alpha=0.2)
+    fig.tight_layout()
+
+    output_path = _ensure_output_path(output_path)
+    if output_path is not None:
+        fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
+
+    return fig
+
+
 def plot_melody_contour(
     result: MelodyAnalysisResult,
     *,
@@ -224,6 +256,7 @@ def plot_spectrogram_with_segments(
 
 
 __all__ = [
+    "plot_melody_only",
     "plot_melody_contour",
     "plot_spectrogram_with_segments",
 ]
