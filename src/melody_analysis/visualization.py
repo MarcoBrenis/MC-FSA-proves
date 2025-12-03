@@ -187,6 +187,32 @@ def plot_f0_only(
     return fig
 
 
+def plot_f0_no_segments(
+    result: MelodyAnalysisResult,
+    *,
+    output_path: Optional[Path] = None,
+    dpi: int = 300,
+) -> Figure:
+    """Graficar solo la curva de f0 en Hz sin resaltar segmentos."""
+
+    times = result.features.times
+    f0_hz = _midi_to_hz(result.features.pitch_midi)
+
+    fig, ax = plt.subplots(figsize=(10, 3))
+    ax.plot(times, f0_hz, label="f0 (Hz)", color="tab:red")
+    ax.set_xlabel("Tiempo (s)")
+    ax.set_ylabel("f0 (Hz)")
+    ax.set_title("Frecuencia fundamental (sin segmentos)")
+    ax.grid(True, alpha=0.2)
+    fig.tight_layout()
+
+    output_path = _ensure_output_path(output_path)
+    if output_path is not None:
+        fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
+
+    return fig
+
+
 def plot_melody_contour(
     result: MelodyAnalysisResult,
     *,
@@ -316,6 +342,7 @@ def plot_spectrogram_with_segments(
 
 
 __all__ = [
+    "plot_f0_no_segments",
     "plot_f0_only",
     "plot_melody_only",
     "plot_melody_contour",
