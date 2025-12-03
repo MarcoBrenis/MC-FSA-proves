@@ -152,6 +152,47 @@ python examples/visualizar_melodia_v2.py
 Solo necesitas sustituir la ruta `1.mp3` que aparece en el script por tu
 archivo de audio antes de ejecutarlo.
 
+## Diagrama de flujo del análisis
+
+El pipeline de `MelodyAnalyzer` (y su clon `melody_analysis_v2`) sigue estos
+pasos de izquierda a derecha:
+
+```mermaid
+flowchart LR
+    A[Audio de entrada<br/>WAV/MP3] --> B[Extracción STFT<br/>+ espectrograma mel]
+    B --> C[Estimación de contorno<br/>f0 en MIDI y Hz]
+    C --> D[Suavizado y normalización<br/>pitch/energía]
+    D --> E[Curva de novedad
+             basada en derivadas]
+    D --> F[Matriz de autosimilitud
+             con núcleo checkerboard]
+    E --> G[Fusión de pistas de cambio<br/>novelty + autosimilitud]
+    F --> G
+    G --> H[Detección de límites<br/>de segmentos]
+    H --> I[Cálculo de descriptores<br/>por segmento
+            (pendiente, rango,
+             tensión paramétrica)]
+    I --> J[Clasificador heurístico
+            (exposición, pregunta,
+             respuesta, etc.)]
+    J --> K[Visualización
+            contorno + f0 + colores
+            por etiqueta]
+    J --> L[Export JSON
+            con etiquetas
+            y descriptores]
+```
+
+- **Autosimilitud**: compara ventanas del contorno para resaltar repeticiones o
+  contrastes; se filtra con un núcleo tipo checkerboard para obtener una curva
+  de novedad adicional.
+- **Fusión de pistas**: la curva de novedad derivada (saltos en pitch/energía)
+  se combina con la curva proveniente de autosimilitud; los picos resultantes
+  definen los posibles cortes de frase.
+- **Clasificación**: cada segmento recibe descriptores de contorno, rango,
+  energía y tensión; un clasificador por reglas asigna roles musicales
+  sencillos (exposición, pregunta, respuesta, transición, etc.).
+
 ## Pruebas
 
 ```bash
