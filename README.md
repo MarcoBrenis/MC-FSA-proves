@@ -48,6 +48,7 @@ En código:
 ```python
 from melody_analysis import (
     MelodyAnalyzer,
+    plot_f0_only,
     plot_melody_only,
     plot_melody_contour,
     plot_spectrogram_with_segments,
@@ -63,9 +64,11 @@ for segmento in resultado.segments:
 fig1 = plot_melody_contour(resultado)
 audio, sample_rate = librosa.load("ruta/al/audio.wav", sr=22050)
 fig2 = plot_spectrogram_with_segments(audio, sample_rate, resultado)
-# Si solo quieres el contorno melódico sin energía:
+# Si solo quieres el contorno melódico sin energía o f0:
 fig_melodia = plot_melody_only(resultado)
-# Las gráficas incluyen el contorno en MIDI y la curva f0 (Hz) superpuesta.
+# Si quieres únicamente la curva de f0 en Hz:
+fig_f0 = plot_f0_only(resultado)
+# Las gráficas incluyen el contorno en MIDI y la curva f0 (Hz) superpuesta cuando aplica.
 ```
 
 Si quieres usar directamente el clon con los colores mejorados (`melody_analysis_v2`)
@@ -77,6 +80,7 @@ prefijo `src` así:
 ```python
 from melody_analysis_v2 import (
     MelodyAnalyzer,
+    plot_f0_only,
     plot_melody_only,
     plot_melody_contour,
     plot_spectrogram_with_segments,
@@ -91,8 +95,10 @@ for segmento in resultado.segments:
 fig1 = plot_melody_contour(resultado)
 audio, sample_rate = librosa.load("1.mp3", sr=22050)
 fig2 = plot_spectrogram_with_segments(audio, sample_rate, resultado)
-# Visualización minimalista solo del pitch
+# Visualización minimalista solo del pitch en MIDI
 fig_melodia = plot_melody_only(resultado)
+# Visualización minimalista solo de f0 en Hz
+fig_f0 = plot_f0_only(resultado)
 ```
 
 ### Checklist rápido para usar el visualizador en tu propio script
