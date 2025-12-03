@@ -5,6 +5,10 @@ El flujo está inspirado en MSAF pero se centra en la melodía: extrae el contor
 (pitch y energía), detecta cambios estructurales y etiqueta cada frase con roles
 musicales sencillos como "exposición", "pregunta" o "respuesta".
 
+El detector de secciones combina dos pistas de cambio: una curva de novedad
+derivada (saltos en pitch/energía) y una matriz de autosimilitud con núcleo
+"checkerboard" para resaltar repeticiones y contrastes entre fragmentos.
+
 ## Instalación
 
 ```bash
