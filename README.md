@@ -75,7 +75,8 @@ fig_f0_plano = plot_f0_no_segments(resultado)
 # Las gráficas incluyen el contorno en MIDI y la curva f0 (Hz) superpuesta cuando aplica.
 
 # ¿Quieres renombrar las etiquetas (ej. "pregunta"→"Q" y "respuesta"→"A")?
-# Pasa alias al clasificador cuando crees el analizador; los colores se conservan.
+# Solo cambia la línea donde se crea el analizador y pasa alias al clasificador;
+# no hace falta tocar nada más y los colores/leyendas se conservan.
 analyzer_custom = MelodyAnalyzer(
     classifier=MelodyClassifier(label_aliases={"pregunta": "Q", "respuesta": "A"})
 )
@@ -91,6 +92,7 @@ prefijo `src` así:
 ```python
 from melody_analysis_v2 import (
     MelodyAnalyzer,
+    MelodyClassifier,
     plot_f0_no_segments,
     plot_f0_only,
     plot_melody_only,
@@ -104,6 +106,11 @@ resultado = analyzer.analyze_file("1.mp3")
 for segmento in resultado.segments:
     print(segmento.label, segmento.segment.start_time, segmento.segment.end_time)
 
+# Para renombrar etiquetas en este mismo ejemplo, cambia la línea anterior por:
+# analyzer = MelodyAnalyzer(
+#     classifier=MelodyClassifier(label_aliases={"pregunta": "Q", "respuesta": "A"})
+# )
+
 fig1 = plot_melody_contour(resultado)
 audio, sample_rate = librosa.load("1.mp3", sr=22050)
 fig2 = plot_spectrogram_with_segments(audio, sample_rate, resultado)
@@ -114,6 +121,24 @@ fig_f0 = plot_f0_only(resultado)
 # Visualización de f0 sin tramas de segmentos
 fig_f0_plano = plot_f0_no_segments(resultado)
 ```
+
+### Guía rápida para renombrar etiquetas a Q/A (o cualquier alias)
+
+1. **Vía código (v1 o v2):** al crear el analizador, pasa `label_aliases` al
+   clasificador. Solo necesitas modificar esa línea.
+
+   ```python
+   from melody_analysis import MelodyAnalyzer, MelodyClassifier  # o melody_analysis_v2
+
+   analyzer = MelodyAnalyzer(
+       classifier=MelodyClassifier(label_aliases={"pregunta": "Q", "respuesta": "A"})
+   )
+   resultado = analyzer.analyze_file("ruta/al/audio.wav")
+   ```
+
+2. **Usando el ejemplo `examples/visualizar_melodia_v2.py`:** cambia la línea
+   `analyzer = MelodyAnalyzer()` por la versión con alias anterior; no hay que
+   tocar nada más en el script.
 
 ### Checklist rápido para usar el visualizador en tu propio script
 
