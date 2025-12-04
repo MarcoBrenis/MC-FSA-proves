@@ -47,6 +47,7 @@ def _configure_backend() -> None:
 _configure_backend()
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from matplotlib.patches import Patch
 
 try:  # pragma: no cover
     import librosa
@@ -80,6 +81,18 @@ def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> Non
             va="bottom",
             fontsize=8,
         )
+
+
+def _format_segment_label(label: str) -> tuple[str, str, dict]:
+    highlight_map = {"pregunta": ("Q", "red"), "respuesta": ("A", "green")}
+    display_label, color = highlight_map.get(label, (label, "white"))
+
+    if label in highlight_map:
+        bbox = {"facecolor": color, "alpha": 0.25, "pad": 1, "edgecolor": "none"}
+    else:
+        bbox = {"facecolor": "black", "alpha": 0.4, "pad": 1}
+
+    return display_label, color, bbox
 
 
 def plot_melody_contour(
@@ -167,16 +180,23 @@ def plot_spectrogram_with_segments(
             alpha=0.15,
             linewidth=0,
         )
+        display_label, color, bbox = _format_segment_label(ann.label)
         ax.text(
             (ann.segment.start_time + ann.segment.end_time) / 2,
             ymax - 1,
-            ann.label,
+            display_label,
             ha="center",
             va="top",
-            color="white",
+            color=color,
             fontsize=8,
-            bbox={"facecolor": "black", "alpha": 0.4, "pad": 1},
+            bbox=bbox,
         )
+
+    legend_handles = [
+        Patch(facecolor="red", alpha=0.25, label="rojo = question (Q)"),
+        Patch(facecolor="green", alpha=0.25, label="verde = answer (A)"),
+    ]
+    ax.legend(handles=legend_handles, loc="upper right")
 
     ax.set_title("Espectrograma con secciones anotadas (v2)")
     fig.tight_layout()
