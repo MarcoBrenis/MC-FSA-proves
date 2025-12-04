@@ -23,6 +23,12 @@ class MelodyAnalysisResult:
 
     features: MelodyFeatures
     segments: List[MelodySegmentAnnotation]
+    novelty: Optional[np.ndarray] = None
+    base_novelty: Optional[np.ndarray] = None
+    ssm_novelty: Optional[np.ndarray] = None
+    self_similarity: Optional[np.ndarray] = None
+    normalized_audio: Optional[np.ndarray] = None
+    sample_rate: Optional[int] = None
 
     def to_dict(self) -> dict:
         """Serialize the analysis to a JSON-compatible dictionary."""
@@ -61,18 +67,47 @@ class MelodyAnalyzer:
         self.hop_length = hop_length
         self.sample_rate = sample_rate
 
-    def analyze_features(self, features: MelodyFeatures) -> MelodyAnalysisResult:
+    def analyze_features(
+        self,
+        features: MelodyFeatures,
+        *,
+        normalized_audio: Optional[np.ndarray] = None,
+        sample_rate: Optional[int] = None,
+    ) -> MelodyAnalysisResult:
         segments = self.segmenter.segment(features)
         annotations = self.classifier.classify(features, segments)
-        return MelodyAnalysisResult(features=features, segments=annotations)
+
+        novelty = getattr(self.segmenter, "last_novelty", None)
+        base_novelty = getattr(self.segmenter, "last_base_novelty", None)
+        ssm_novelty = getattr(self.segmenter, "last_ssm_novelty", None)
+        self_similarity = getattr(self.segmenter, "last_self_similarity", None)
+
+        return MelodyAnalysisResult(
+            features=features,
+            segments=annotations,
+            novelty=novelty,
+            base_novelty=base_novelty,
+            ssm_novelty=ssm_novelty,
+            self_similarity=self_similarity,
+            normalized_audio=normalized_audio,
+            sample_rate=sample_rate,
+        )
 
     def analyze_audio(self, audio: np.ndarray, sample_rate: int) -> MelodyAnalysisResult:
+        audio = np.asarray(audio, dtype=float)
+        if audio.ndim > 1:
+            audio = np.mean(audio, axis=0)
+        if np.max(np.abs(audio)) > 0:
+            audio = audio / np.max(np.abs(audio))
+
         features = extract_melody_features(
             audio,
             sample_rate,
             hop_length=self.hop_length,
         )
-        return self.analyze_features(features)
+        return self.analyze_features(
+            features, normalized_audio=audio, sample_rate=sample_rate
+        )
 
     def analyze_file(self, path: str) -> MelodyAnalysisResult:
         if librosa is None:

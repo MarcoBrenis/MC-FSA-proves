@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List
+from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -40,10 +40,16 @@ class MelodyClassifier:
         slope_threshold: float = 0.5,
         energy_threshold: float = 1.05,
         range_threshold: float = 1.5,
+        label_aliases: Optional[Dict[str, str]] = None,
     ) -> None:
         self.slope_threshold = slope_threshold
         self.energy_threshold = energy_threshold
         self.range_threshold = range_threshold
+        self.label_aliases = (
+            {k.lower(): v for k, v in label_aliases.items()}
+            if label_aliases
+            else {}
+        )
 
     def _segment_descriptor(
         self, features: MelodyFeatures, segment: MelodySegment
@@ -111,6 +117,9 @@ class MelodyClassifier:
             label = self._classify_descriptor(descriptor, i, len(segments))
             slope = descriptor["slope"]
             confidence = float(1.0 - min(abs(slope) / (self.slope_threshold + 1e-6), 1.0))
+
+            if self.label_aliases:
+                label = self.label_aliases.get(label.lower(), label)
             annotations.append(
                 MelodySegmentAnnotation(
                     segment=segment,
