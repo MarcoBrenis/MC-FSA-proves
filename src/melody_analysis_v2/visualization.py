@@ -67,11 +67,11 @@ def _ensure_output_path(output_path: Optional[Path]) -> Optional[Path]:
 
 def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> None:
     for ann in segments:
-        display_label, color, bbox = _format_segment_label(ann.label)
+        display_label, color, bbox, overlay_color = _format_segment_label(ann.label)
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
-            color="tab:orange",
+            color=overlay_color,
             alpha=0.15,
         )
         ax.text(
@@ -86,24 +86,26 @@ def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> Non
         )
 
 
-def _format_segment_label(label: str) -> tuple[str, str, dict]:
+def _format_segment_label(label: str, *, fallback_overlay: str = "tab:orange") -> tuple[str, str, dict, str]:
     normalized = label.strip().lower()
-    highlight_map = {
-        "pregunta": ("Q", "red"),
-        "question": ("Q", "red"),
-        "q": ("Q", "red"),
-        "respuesta": ("A", "green"),
-        "answer": ("A", "green"),
-        "a": ("A", "green"),
+    highlight_map: dict[str, tuple[str, str, str]] = {
+        "pregunta": ("Q", "red", "red"),
+        "question": ("Q", "red", "red"),
+        "q": ("Q", "red", "red"),
+        "respuesta": ("A", "green", "green"),
+        "answer": ("A", "green", "green"),
+        "a": ("A", "green", "green"),
     }
-    display_label, color = highlight_map.get(normalized, (label, "white"))
+    display_label, color, overlay_color = highlight_map.get(
+        normalized, (label, "white", fallback_overlay)
+    )
 
     if normalized in highlight_map:
         bbox = {"facecolor": color, "alpha": 0.25, "pad": 1, "edgecolor": "none"}
     else:
         bbox = {"facecolor": "black", "alpha": 0.4, "pad": 1}
 
-    return display_label, color, bbox
+    return display_label, color, bbox, overlay_color
 
 
 def plot_melody_contour(
@@ -190,14 +192,16 @@ def plot_spectrogram_with_segments(
 
     ymax = S_db.shape[0]
     for ann in result.segments:
+        display_label, color, bbox, overlay_color = _format_segment_label(
+            ann.label, fallback_overlay="white"
+        )
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
-            color="white",
+            color=overlay_color,
             alpha=0.15,
             linewidth=0,
         )
-        display_label, color, bbox = _format_segment_label(ann.label)
         ax.text(
             (ann.segment.start_time + ann.segment.end_time) / 2,
             ymax - 1,
