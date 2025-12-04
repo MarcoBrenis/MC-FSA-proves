@@ -47,6 +47,7 @@ En código:
 
 ```python
 from melody_analysis import (
+    MelodyClassifier,
     MelodyAnalyzer,
     plot_f0_no_segments,
     plot_f0_only,
@@ -72,6 +73,13 @@ fig_f0 = plot_f0_only(resultado)
 # Si prefieres f0 sin ninguna superposición de segmentos:
 fig_f0_plano = plot_f0_no_segments(resultado)
 # Las gráficas incluyen el contorno en MIDI y la curva f0 (Hz) superpuesta cuando aplica.
+
+# ¿Quieres renombrar las etiquetas (ej. "pregunta"→"Q" y "respuesta"→"A")?
+# Pasa alias al clasificador cuando crees el analizador; los colores se conservan.
+analyzer_custom = MelodyAnalyzer(
+    classifier=MelodyClassifier(label_aliases={"pregunta": "Q", "respuesta": "A"})
+)
+resultado_custom = analyzer_custom.analyze_file("ruta/al/audio.wav")
 ```
 
 Si quieres usar directamente el clon con los colores mejorados (`melody_analysis_v2`)

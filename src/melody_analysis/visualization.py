@@ -70,11 +70,21 @@ LABEL_COLOR_MAP = {
     "afirmacion": "tab:gray",
 }
 
+LABEL_ALIAS_COLOR_MAP = {
+    "q": LABEL_COLOR_MAP["pregunta"],
+    "a": LABEL_COLOR_MAP["respuesta"],
+}
+
 
 def _label_color(label: str) -> str:
     """Asignar un color consistente a cada etiqueta funcional."""
 
-    return LABEL_COLOR_MAP.get(label.lower(), "tab:gray")
+    label_lower = label.lower()
+    if label_lower in LABEL_COLOR_MAP:
+        return LABEL_COLOR_MAP[label_lower]
+    if label_lower in LABEL_ALIAS_COLOR_MAP:
+        return LABEL_ALIAS_COLOR_MAP[label_lower]
+    return "tab:gray"
 
 
 def _midi_to_hz(pitch_midi: np.ndarray) -> np.ndarray:

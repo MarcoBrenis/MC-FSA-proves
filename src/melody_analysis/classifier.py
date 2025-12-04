@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List
+from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -52,6 +52,7 @@ class MelodyClassifier:
         tension_high: float = 0.8,
         tension_low: float = -0.2,
         transition_delta_tension: float = 0.25,
+        label_aliases: Optional[Dict[str, str]] = None,
     ) -> None:
         # Pendiente mínima para considerar claramente asc/desc
         self.slope_threshold = slope_threshold
@@ -66,6 +67,12 @@ class MelodyClassifier:
         self.tension_low = tension_low
         # Aumento mínimo de tensión para marcar transición
         self.transition_delta_tension = transition_delta_tension
+        # Permite renombrar etiquetas (ej. "pregunta" -> "Q", "respuesta" -> "A")
+        self.label_aliases = (
+            {k.lower(): v for k, v in label_aliases.items()}
+            if label_aliases
+            else {}
+        )
 
     def _segment_descriptor(
         self,
@@ -236,6 +243,9 @@ class MelodyClassifier:
             confidence = float(
                 1.0 - min(abs(slope) / (self.slope_threshold + 1e-6), 1.0)
             )
+
+            if self.label_aliases:
+                label = self.label_aliases.get(label.lower(), label)
 
             annotations.append(
                 MelodySegmentAnnotation(
