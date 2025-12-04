@@ -14,7 +14,12 @@ import numpy as np  # Para operaciones numéricas, especialmente con arrays.
 # Se importa la clase principal y los auxiliares de visualización del clon v2.
 from melody_analysis_v2 import (
     MelodyAnalyzer,  # Encapsula la extracción, segmentación y clasificación.
+    MelodyClassifier,  # Permite definir alias como Q/A.
+    plot_boundary_detection,  # Curvas de novedad para detectar fronteras.
+    plot_descriptor_summary,  # Resumen de descriptores por segmento.
     plot_melody_contour,  # Función para graficar el contorno melódico.
+    plot_segment_extraction,  # Sólo las franjas de segmentos detectados.
+    plot_self_similarity,  # Matriz de autosimilitud del analizador.
     plot_spectrogram_with_segments,  # Función para graficar el espectrograma con secciones.
 )
 
@@ -26,7 +31,12 @@ def main() -> None:
     # Se define la ruta al archivo de audio que se quiere analizar.
     audio_path = "1.mp3"
     # Se crea una instancia del analizador de melodías.
+    # Si quieres alias (p. ej. "pregunta"→"Q" y "respuesta"→"A"),
+    # sustituye la siguiente línea por la que está comentada justo debajo.
     analyzer = MelodyAnalyzer()
+    # analyzer = MelodyAnalyzer(
+    #     classifier=MelodyClassifier(label_aliases={"pregunta": "Q", "respuesta": "A"})
+    # )
     # Se llama al método para analizar el archivo, que devuelve un objeto con los resultados.
     resultado = analyzer.analyze_file(audio_path)
 
@@ -106,6 +116,43 @@ def main() -> None:
         plt.close(sections_fig)
     # Se muestra la ruta donde quedó guardado el espectrograma con secciones.
     print(f"Mel-espectrograma segmentado guardado en: {sections_path.resolve()}")
+
+    # --- Visualizaciones por etapa (separadas) ---
+    if resultado.self_similarity is not None:
+        ssm_fig = plot_self_similarity(resultado)
+        ssm_path = output_dir / "autosimilitud.png"
+        ssm_fig.savefig(ssm_path, dpi=150, bbox_inches="tight")
+        if not interactive_backend:
+            plt.close(ssm_fig)
+        print(f"Matriz de autosimilitud guardada en: {ssm_path.resolve()}")
+    else:
+        print("No hay matriz de autosimilitud disponible en el resultado.")
+
+    try:
+        novelty_fig = plot_boundary_detection(resultado)
+    except ValueError:
+        novelty_fig = None
+        print("No hay curvas de novedad para graficar boundary detection.")
+    else:
+        novelty_path = output_dir / "boundary_detection.png"
+        novelty_fig.savefig(novelty_path, dpi=150, bbox_inches="tight")
+        if not interactive_backend:
+            plt.close(novelty_fig)
+        print(f"Boundary detection guardado en: {novelty_path.resolve()}")
+
+    segs_fig = plot_segment_extraction(resultado)
+    segs_path = output_dir / "segment_extraction.png"
+    segs_fig.savefig(segs_path, dpi=150, bbox_inches="tight")
+    if not interactive_backend:
+        plt.close(segs_fig)
+    print(f"Segment extraction guardado en: {segs_path.resolve()}")
+
+    desc_fig = plot_descriptor_summary(resultado)
+    desc_path = output_dir / "descriptor_summary.png"
+    desc_fig.savefig(desc_path, dpi=150, bbox_inches="tight")
+    if not interactive_backend:
+        plt.close(desc_fig)
+    print(f"Descriptor summary guardado en: {desc_path.resolve()}")
 
     # Si hay backend interactivo se realiza un plt.show() final para abrir las ventanas.
     if interactive_backend:
