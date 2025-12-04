@@ -51,6 +51,7 @@ def _configure_backend() -> None:
 _configure_backend()
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from matplotlib.patches import Patch
 
 try:  # pragma: no cover - dependencia opcional para espectrogramas
     import librosa
@@ -74,21 +75,48 @@ def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> Non
     """Sombrear cada segmento en el eje temporal."""
 
     for ann in segments:
+        display_label, color, bbox, overlay_color = _format_segment_label(ann.label)
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
-            color="tab:orange",
+            color=overlay_color,
             alpha=0.15,
         )
         ax.text(
             (ann.segment.start_time + ann.segment.end_time) / 2,
             ymax,
-            ann.label,
+            display_label,
             ha="center",
             va="bottom",
+            color=color,
             fontsize=8,
+            bbox=bbox,
             rotation=0,
         )
+
+
+def _format_segment_label(label: str, *, fallback_overlay: str = "tab:orange") -> tuple[str, str, dict, str]:
+    """Preparar la etiqueta abreviada y su estilo de color."""
+
+    normalized = label.strip().lower()
+    highlight_map: dict[str, tuple[str, str, str]] = {
+        "pregunta": ("Q", "red", "red"),
+        "question": ("Q", "red", "red"),
+        "q": ("Q", "red", "red"),
+        "respuesta": ("A", "green", "green"),
+        "answer": ("A", "green", "green"),
+        "a": ("A", "green", "green"),
+    }
+    display_label, color, overlay_color = highlight_map.get(
+        normalized, (label, "white", fallback_overlay)
+    )
+
+    if normalized in highlight_map:
+        bbox = {"facecolor": color, "alpha": 0.25, "pad": 1, "edgecolor": "none"}
+    else:
+        bbox = {"facecolor": "black", "alpha": 0.4, "pad": 1}
+
+    return display_label, color, bbox, overlay_color
 
 
 def plot_melody_contour(
@@ -111,6 +139,12 @@ def plot_melody_contour(
 
     ymax = float(np.nanmax(pitch)) if pitch.size else 0.0
     _draw_segment_overlays(ax1, result.segments, ymax)
+
+    legend_handles = [
+        Patch(facecolor="red", alpha=0.25, label="rojo = question (Q)"),
+        Patch(facecolor="green", alpha=0.25, label="verde = answer (A)"),
+    ]
+    ax1.legend(handles=legend_handles, loc="upper right")
 
     ax2 = ax1.twinx()
     ax2.plot(times, energy, label="Energía", color="tab:green", alpha=0.6)
@@ -176,23 +210,32 @@ def plot_spectrogram_with_segments(
 
     ymax = S_db.shape[0]
     for ann in result.segments:
+        display_label, color, bbox, overlay_color = _format_segment_label(
+            ann.label, fallback_overlay="white"
+        )
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
-            color="white",
+            color=overlay_color,
             alpha=0.15,
             linewidth=0,
         )
         ax.text(
             (ann.segment.start_time + ann.segment.end_time) / 2,
             ymax - 1,
-            ann.label,
+            display_label,
             ha="center",
             va="top",
-            color="white",
+            color=color,
             fontsize=8,
-            bbox={"facecolor": "black", "alpha": 0.4, "pad": 1},
+            bbox=bbox,
         )
+
+    legend_handles = [
+        Patch(facecolor="red", alpha=0.25, label="rojo = question (Q)"),
+        Patch(facecolor="green", alpha=0.25, label="verde = answer (A)"),
+    ]
+    ax.legend(handles=legend_handles, loc="upper right")
 
     ax.set_title("Espectrograma mel con secciones anotadas")
     fig.tight_layout()
