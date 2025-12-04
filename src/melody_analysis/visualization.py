@@ -95,10 +95,18 @@ def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> Non
 def _format_segment_label(label: str) -> tuple[str, str, dict]:
     """Preparar la etiqueta abreviada y su estilo de color."""
 
-    highlight_map = {"pregunta": ("Q", "red"), "respuesta": ("A", "green")}
-    display_label, color = highlight_map.get(label, (label, "white"))
+    normalized = label.strip().lower()
+    highlight_map = {
+        "pregunta": ("Q", "red"),
+        "question": ("Q", "red"),
+        "q": ("Q", "red"),
+        "respuesta": ("A", "green"),
+        "answer": ("A", "green"),
+        "a": ("A", "green"),
+    }
+    display_label, color = highlight_map.get(normalized, (label, "white"))
 
-    if label in highlight_map:
+    if normalized in highlight_map:
         bbox = {"facecolor": color, "alpha": 0.25, "pad": 1, "edgecolor": "none"}
     else:
         bbox = {"facecolor": "black", "alpha": 0.4, "pad": 1}
