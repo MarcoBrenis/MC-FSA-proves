@@ -67,6 +67,7 @@ def _ensure_output_path(output_path: Optional[Path]) -> Optional[Path]:
 
 def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> None:
     for ann in segments:
+        display_label, color, bbox = _format_segment_label(ann.label)
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
@@ -76,10 +77,12 @@ def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> Non
         ax.text(
             (ann.segment.start_time + ann.segment.end_time) / 2,
             ymax,
-            ann.label,
+            display_label,
             ha="center",
             va="bottom",
+            color=color,
             fontsize=8,
+            bbox=bbox,
         )
 
 
@@ -121,6 +124,12 @@ def plot_melody_contour(
 
     ymax = float(np.nanmax(pitch)) if pitch.size else 0.0
     _draw_segment_overlays(ax1, result.segments, ymax)
+
+    legend_handles = [
+        Patch(facecolor="red", alpha=0.25, label="rojo = question (Q)"),
+        Patch(facecolor="green", alpha=0.25, label="verde = answer (A)"),
+    ]
+    ax1.legend(handles=legend_handles, loc="upper right")
 
     ax2 = ax1.twinx()
     ax2.plot(times, energy, color="tab:green", alpha=0.6)
