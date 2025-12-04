@@ -60,6 +60,39 @@ except Exception:  # pragma: no cover
 
 from .pipeline import MelodyAnalysisResult
 
+LABEL_COLOR_MAP = {
+    "exposicion": "tab:blue",
+    "desarrollo": "tab:orange",
+    "pregunta": "tab:red",
+    "respuesta": "tab:green",
+    "transicion": "tab:purple",
+    "cadencia": "tab:brown",
+    "afirmacion": "tab:gray",
+}
+
+LABEL_ALIAS_COLOR_MAP = {
+    "q": LABEL_COLOR_MAP["pregunta"],
+    "a": LABEL_COLOR_MAP["respuesta"],
+}
+
+
+def _label_color(label: str) -> str:
+    """Asignar un color consistente a cada etiqueta funcional."""
+
+    label_lower = label.lower()
+    if label_lower in LABEL_COLOR_MAP:
+        return LABEL_COLOR_MAP[label_lower]
+    if label_lower in LABEL_ALIAS_COLOR_MAP:
+        return LABEL_ALIAS_COLOR_MAP[label_lower]
+    return "tab:gray"
+
+
+def _midi_to_hz(pitch_midi: np.ndarray) -> np.ndarray:
+    """Convertir valores MIDI a frecuencia fundamental (f0) en Hz."""
+
+    pitch_midi = np.asarray(pitch_midi, dtype=float)
+    return 440.0 * np.power(2.0, (pitch_midi - 69.0) / 12.0)
+
 
 def _ensure_output_path(output_path: Optional[Path]) -> Optional[Path]:
     """Crear la carpeta de salida si se especifica una ruta."""
@@ -74,10 +107,11 @@ def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> Non
     """Sombrear cada segmento en el eje temporal."""
 
     for ann in segments:
+        color = _label_color(ann.label)
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
-            color="tab:orange",
+            color=color,
             alpha=0.15,
         )
         ax.text(
@@ -88,7 +122,105 @@ def _draw_segment_overlays(ax: plt.Axes, segments: Iterable, ymax: float) -> Non
             va="bottom",
             fontsize=8,
             rotation=0,
+            color=color,
         )
+
+
+def plot_melody_only(
+    result: MelodyAnalysisResult,
+    *,
+    output_path: Optional[Path] = None,
+    dpi: int = 300,
+    show_segments: bool = True,
+) -> Figure:
+    """Graficar únicamente el contorno melódico opcionalmente con segmentos."""
+
+    times = result.features.times
+    pitch = result.features.pitch_midi
+    f0_hz = _midi_to_hz(pitch)
+
+    fig, ax = plt.subplots(figsize=(10, 3))
+    ax.plot(times, pitch, label="Melodía (MIDI)", color="tab:blue")
+    ax.set_xlabel("Tiempo (s)")
+    ax.set_ylabel("Pitch (MIDI)")
+
+    # Eje secundario para f0 en Hz
+    ax_hz = ax.twinx()
+    ax_hz.plot(times, f0_hz, label="f0 (Hz)", color="tab:red", alpha=0.5)
+    ax_hz.set_ylabel("f0 (Hz)", color="tab:red")
+    ax_hz.tick_params(axis="y", labelcolor="tab:red")
+
+    if show_segments:
+        ymax = float(np.nanmax(pitch)) if pitch.size else 0.0
+        _draw_segment_overlays(ax, result.segments, ymax)
+
+    ax.set_title("Contorno melódico")
+    ax.grid(True, alpha=0.2)
+    fig.tight_layout()
+
+    output_path = _ensure_output_path(output_path)
+    if output_path is not None:
+        fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
+
+    return fig
+
+
+def plot_f0_only(
+    result: MelodyAnalysisResult,
+    *,
+    output_path: Optional[Path] = None,
+    dpi: int = 300,
+    show_segments: bool = False,
+) -> Figure:
+    """Graficar únicamente la curva de f0 en Hz sin el contorno en MIDI."""
+
+    times = result.features.times
+    f0_hz = _midi_to_hz(result.features.pitch_midi)
+
+    fig, ax = plt.subplots(figsize=(10, 3))
+    ax.plot(times, f0_hz, label="f0 (Hz)", color="tab:red")
+    ax.set_xlabel("Tiempo (s)")
+    ax.set_ylabel("f0 (Hz)")
+
+    if show_segments:
+        ymax = float(np.nanmax(f0_hz)) if f0_hz.size else 0.0
+        _draw_segment_overlays(ax, result.segments, ymax)
+
+    ax.set_title("Curva de frecuencia fundamental (solo f0)")
+    ax.grid(True, alpha=0.2)
+    fig.tight_layout()
+
+    output_path = _ensure_output_path(output_path)
+    if output_path is not None:
+        fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
+
+    return fig
+
+
+def plot_f0_no_segments(
+    result: MelodyAnalysisResult,
+    *,
+    output_path: Optional[Path] = None,
+    dpi: int = 300,
+) -> Figure:
+    """Graficar solo la curva de f0 en Hz sin resaltar segmentos."""
+
+    times = result.features.times
+    f0_hz = _midi_to_hz(result.features.pitch_midi)
+
+    fig, ax = plt.subplots(figsize=(10, 3))
+    ax.plot(times, f0_hz, label="f0 (Hz)", color="tab:red")
+    ax.set_xlabel("Tiempo (s)")
+    ax.set_ylabel("f0 (Hz)")
+    ax.set_title("Frecuencia fundamental (sin segmentos)")
+    ax.grid(True, alpha=0.2)
+    fig.tight_layout()
+
+    output_path = _ensure_output_path(output_path)
+    if output_path is not None:
+        fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
+
+    return fig
 
 
 def plot_melody_contour(
@@ -102,6 +234,7 @@ def plot_melody_contour(
     times = result.features.times
     pitch = result.features.pitch_midi
     energy = result.features.energy
+    f0_hz = _midi_to_hz(pitch)
 
     fig, ax1 = plt.subplots(figsize=(10, 4))
     ax1.plot(times, pitch, label="Melodía (MIDI)", color="tab:blue")
@@ -116,6 +249,13 @@ def plot_melody_contour(
     ax2.plot(times, energy, label="Energía", color="tab:green", alpha=0.6)
     ax2.set_ylabel("Energía normalizada", color="tab:green")
     ax2.tick_params(axis="y", labelcolor="tab:green")
+
+    # Mostrar f0 en Hz en un tercer eje para evitar solapamientos
+    ax3 = ax1.twinx()
+    ax3.spines["right"].set_position(("axes", 1.1))
+    ax3.plot(times, f0_hz, label="f0 (Hz)", color="tab:red", alpha=0.5)
+    ax3.set_ylabel("f0 (Hz)", color="tab:red")
+    ax3.tick_params(axis="y", labelcolor="tab:red")
 
     ax1.set_title("Contorno melódico y segmentos detectados")
     fig.tight_layout()
@@ -174,12 +314,18 @@ def plot_spectrogram_with_segments(
     )
     fig.colorbar(img, ax=ax, format="%.0f dB", label="Intensidad")
 
+    # Trazar f0 sobre el eje mel para ubicar la fundamental
+    f0_hz = _midi_to_hz(result.features.pitch_midi)
+    f0_mel = librosa.hz_to_mel(f0_hz)
+    ax.plot(result.features.times, f0_mel, color="white", linewidth=1.5, alpha=0.9, label="f0")
+
     ymax = S_db.shape[0]
     for ann in result.segments:
+        color = _label_color(ann.label)
         ax.axvspan(
             ann.segment.start_time,
             ann.segment.end_time,
-            color="white",
+            color=color,
             alpha=0.15,
             linewidth=0,
         )
@@ -189,12 +335,13 @@ def plot_spectrogram_with_segments(
             ann.label,
             ha="center",
             va="top",
-            color="white",
+            color="black",
             fontsize=8,
-            bbox={"facecolor": "black", "alpha": 0.4, "pad": 1},
+            bbox={"facecolor": color, "alpha": 0.35, "pad": 1},
         )
 
-    ax.set_title("Espectrograma mel con secciones anotadas")
+    ax.set_title("Espectrograma mel con secciones anotadas y f0")
+    ax.legend(loc="upper right")
     fig.tight_layout()
 
     output_path = _ensure_output_path(output_path)
@@ -205,6 +352,9 @@ def plot_spectrogram_with_segments(
 
 
 __all__ = [
+    "plot_f0_no_segments",
+    "plot_f0_only",
+    "plot_melody_only",
     "plot_melody_contour",
     "plot_spectrogram_with_segments",
 ]

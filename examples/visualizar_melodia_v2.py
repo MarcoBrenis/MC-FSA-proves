@@ -14,6 +14,7 @@ import numpy as np  # Para operaciones numéricas, especialmente con arrays.
 # Se importa la clase principal y los auxiliares de visualización del clon v2.
 from melody_analysis_v2 import (
     MelodyAnalyzer,  # Encapsula la extracción, segmentación y clasificación.
+    MelodyClassifier,  # Permite definir alias como Q/A.
     plot_melody_contour,  # Función para graficar el contorno melódico.
     plot_spectrogram_with_segments,  # Función para graficar el espectrograma con secciones.
 )
@@ -26,6 +27,8 @@ def main() -> None:
     # Se define la ruta al archivo de audio que se quiere analizar.
     audio_path = "1.mp3"
     # Se crea una instancia del analizador de melodías.
+    # Si quieres alias (p. ej. "pregunta"→"Q" y "respuesta"→"A"),
+    # cambia la línea por: MelodyAnalyzer(classifier=MelodyClassifier(label_aliases={"pregunta": "Q", "respuesta": "A"}))
     analyzer = MelodyAnalyzer()
     # Se llama al método para analizar el archivo, que devuelve un objeto con los resultados.
     resultado = analyzer.analyze_file(audio_path)

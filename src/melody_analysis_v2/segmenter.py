@@ -31,9 +31,10 @@ class MelodySegmenter:
     """Detects structural boundaries within a melody contour.
 
     The segmentation strategy is inspired by novelty detection techniques employed
-    in MSAF but adjusted to work with melodic descriptors.  The algorithm computes
-    a hybrid novelty curve from the absolute derivative of the pitch and energy
-    trajectories, smooths the curve, and selects salient peaks as boundaries.
+    in MSAF but adjusted to work with melodic descriptors.  The algorithm combines
+    a checkerboard-convolved self-similarity matrix (pitch + energy) with a
+    derivative-based novelty curve, smooths the result, and selects salient peaks
+    as boundaries.
     """
 
     def __init__(
@@ -42,6 +43,9 @@ class MelodySegmenter:
         kernel_size: int = 2,
         peak_threshold: float = 0.2,
         min_separation: int = 6,
+        use_self_similarity: bool = True,
+        checkerboard_radius: int = 8,
+        ssm_weight: float = 0.6,
     ) -> None:
         """Create a segmenter.
 
@@ -60,6 +64,50 @@ class MelodySegmenter:
         self.kernel_size = kernel_size
         self.peak_threshold = peak_threshold
         self.min_separation = min_separation
+        self.use_self_similarity = use_self_similarity
+        self.checkerboard_radius = checkerboard_radius
+        self.ssm_weight = ssm_weight
+
+    def compute_self_similarity(self, features: MelodyFeatures) -> np.ndarray:
+        """Compute a cosine self-similarity matrix from pitch and energy."""
+
+        stacked = np.vstack((features.pitch_midi, features.energy)).T
+        stacked = (stacked - np.mean(stacked, axis=0, keepdims=True)) / (
+            np.std(stacked, axis=0, keepdims=True) + 1e-6
+        )
+        norms = np.linalg.norm(stacked, axis=1, keepdims=True)
+        normalized = stacked / np.maximum(norms, 1e-6)
+
+        sim = normalized @ normalized.T
+        sim = (sim + 1.0) / 2.0
+        np.fill_diagonal(sim, 1.0)
+        return sim
+
+    def compute_checkerboard_novelty(self, sim: np.ndarray) -> np.ndarray:
+        """Compute novelty along the diagonal of the self-similarity matrix."""
+
+        r = self.checkerboard_radius
+        n = sim.shape[0]
+        if n == 0 or n < 2 * r:
+            return np.zeros(n, dtype=float)
+
+        kernel = np.block(
+            [
+                [np.ones((r, r)), -np.ones((r, r))],
+                [-np.ones((r, r)), np.ones((r, r))],
+            ]
+        )
+
+        novelty = np.zeros(n, dtype=float)
+        for i in range(r, n - r):
+            sub = sim[i - r : i + r, i - r : i + r]
+            novelty[i] = float(np.sum(sub * kernel))
+
+        novelty = np.maximum(novelty, 0.0)
+        if np.max(novelty) > 0:
+            novelty = novelty / np.max(novelty)
+        novelty = gaussian_filter1d(novelty, sigma=self.kernel_size)
+        return novelty
 
     def compute_novelty(self, features: MelodyFeatures) -> np.ndarray:
         """Compute the novelty curve used for segmentation."""
@@ -75,9 +123,19 @@ class MelodySegmenter:
         if np.max(energy_diff) > 0:
             energy_diff = energy_diff / np.max(energy_diff)
 
-        novelty = 0.7 * pitch_diff + 0.3 * energy_diff
-        novelty = gaussian_filter1d(novelty, sigma=self.kernel_size)
-        return novelty
+        base_novelty = 0.7 * pitch_diff + 0.3 * energy_diff
+        base_novelty = gaussian_filter1d(base_novelty, sigma=self.kernel_size)
+
+        if not self.use_self_similarity:
+            return base_novelty
+
+        sim = self.compute_self_similarity(features)
+        ssm_novelty = self.compute_checkerboard_novelty(sim)
+
+        combined = (1.0 - self.ssm_weight) * base_novelty + self.ssm_weight * ssm_novelty
+        if np.max(combined) > 0:
+            combined = combined / np.max(combined)
+        return combined
 
     def find_boundaries(self, novelty: np.ndarray) -> np.ndarray:
         """Locate peaks in the novelty curve."""
