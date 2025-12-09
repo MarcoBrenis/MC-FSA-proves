@@ -78,24 +78,24 @@ class MelodyClassifier:
         slope_abs = abs(slope)
 
         if index == 0 and slope_abs < self.slope_threshold and energy_mean >= 1.0:
-            return "exposicion"
+            return "Initiation"
 
         if index == total - 1 and slope_abs < self.slope_threshold and energy_mean < 1.0:
-            return "cadencia"
+            return "Cadence"
 
         if slope > self.slope_threshold or delta_pitch > self.range_threshold:
-            return "pregunta"
+            return "Antecedent"
 
         if slope < -self.slope_threshold or delta_pitch < -self.range_threshold:
-            return "respuesta"
+            return "Consequent"
 
         if pitch_range > self.range_threshold and energy_mean > self.energy_threshold:
-            return "desarrollo"
+            return "Continuation"
 
         if energy_delta > 0.1:
-            return "transicion"
+            return "Continuation"
 
-        return "afirmacion"
+        return "Continuation"
 
     def classify(
         self, features: MelodyFeatures, segments: List[MelodySegment]
